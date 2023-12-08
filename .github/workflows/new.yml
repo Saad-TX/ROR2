@@ -51,6 +51,8 @@ jobs:
         username: ubuntu
         key: ${{secrets.EC2_INSTANCE_SSH_KEY}}
         script: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
           docker stop webapp || true
           docker rm webapp || true
           docker pull 048273253858.dkr.ecr.us-east-1.amazonaws.com/ror-demo:sample_image
