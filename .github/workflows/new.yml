@@ -39,16 +39,16 @@ jobs:
     - name: Pull Docker image from ECR
       run: docker pull 048273253858.dkr.ecr.us-east-1.amazonaws.com/ror-demo:sample_image
 
-    - name: Deploy to EC2
-      run: |
-        echo "$PRIVATE_KEY" > private_key.pem
-        chmod 600 private_key.pem
-        ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@3.89.73.48<< EOF
-          docker stop ror-container || true
-          docker rm ror-container || true
-          docker pull 048273253858.dkr.ecr.us-east-1.amazonaws.com/ror-demo:sample_image
-          docker run -d --name ror-container -p 3000:3000 048273253858.dkr.ecr.us-east-1.amazonaws.com/ror-demo:sample_image
+    # - name: Deploy to EC2
+    #   run: |
+    #     echo "$PRIVATE_KEY" > private_key.pem
+    #     chmod 600 private_key.pem
+    #     ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@3.89.73.48<< EOF
+    #       docker stop ror-container || true
+    #       docker rm ror-container || true
+    #       docker pull 048273253858.dkr.ecr.us-east-1.amazonaws.com/ror-demo:sample_image
+    #       docker run -d --name ror-container -p 3000:3000 048273253858.dkr.ecr.us-east-1.amazonaws.com/ror-demo:sample_image
           
-      env:
-        DOCKER_CLI_APS: "1"
-        PRIVATE_KEY: ${{ secrets.EC2_INSTANCE_SSH_KEY }}
+    #   env:
+    #     DOCKER_CLI_APS: "1"
+    #     PRIVATE_KEY: ${{ secrets.EC2_INSTANCE_SSH_KEY }}
