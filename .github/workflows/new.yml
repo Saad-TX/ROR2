@@ -38,7 +38,28 @@ jobs:
     
     - name: Pull Docker image from ECR
       run: docker pull 048273253858.dkr.ecr.us-east-1.amazonaws.com/ror-demo:sample_image
+    
+    - name: Deploy to Ec2
+      env:  
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ror-demo
+        IMAGE_TAG: sample_image
+        aws-region: us-east-1
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{secrets.SERVER_PUBLIC_IP}}
+        username: ubuntu
+        key: ${{secrets.EC2_INSTANCE_SSH_KEY}}
+        script: |
+          docker stop webapp || true
+          docker rm webapp || true
+          docker pull 048273253858.dkr.ecr.us-east-1.amazonaws.com/ror-demo:sample_image
+          docker run -d --name ror-container -p 3000:3000 048273253858.dkr.ecr.us-east-1.amazonaws.com/ror-demo:sample_image
+        
+        
 
+
+        
     # - name: Deploy to EC2
     #   run: |
     #     echo "$PRIVATE_KEY" > private_key.pem
