@@ -1,43 +1,54 @@
-name: Docker ECR Deploy
+name: Build and push image to ECR
 
-on:
-  push:
-    branches:
-      - main
+on: push
+  
 
 jobs:
-  deploy:
+  
+  build:
+    
+    name: Build Image
     runs-on: ubuntu-latest
 
-    env:
-      AWS_REGION: us-east-1
-      ECR_REGISTRY: ror-demo
-      ECR_REPOSITORY: ror-demo
-      EC2_INSTANCE_IP: 3.89.73.48
-      EC2_INSTANCE_SSH_KEY: ${{ secrets.EC2_INSTANCE_SSH_KEY }}
-      DOCKER_IMAGE_NAME: new-image
-      DOCKER_TAG: ${{ github.sha }}
-
+   
     steps:
-    - name: Checkout Repository
+
+    - name: Check out code
       uses: actions/checkout@v2
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
 
     - name: Login to Amazon ECR
-      run: |
-        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Build and Push Docker Image to ECR
+    - name: Build, tag, and push image to Amazon ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ror-demo
+        IMAGE_TAG: sample_image
       run: |
-        docker build -t $DOCKER_IMAGE_NAME .
-        docker tag $DOCKER_IMAGE_NAME $ECR_REGISTRY/$ECR_REPOSITORY:$DOCKER_TAG
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$DOCKER_TAG
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    
+    - name: Pull Docker image from ECR
+      run: docker pull 048273253858.dkr.ecr.us-east-1.amazonaws.com/ror-demo:sample_image
 
-    - name: Deploy Docker Image to EC2 Instance
+    - name: Deploy to EC2
       run: |
-        scp -i $EC2_INSTANCE_SSH_KEY -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./ec2-deployment ubuntu@$EC2_INSTANCE_IP:/home/ubuntu/
-        ssh -i $EC2_INSTANCE_SSH_KEY -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@$EC2_INSTANCE_IP "cd /home/ubuntu/ec2-deployment && docker-compose up -d"
-
-    - name: Cleanup
-      run: |
-        docker logout $ECR_REGISTRY
-        # Any additional cleanup steps you may need
+        echo "$PRIVATE_KEY" > private_key.pem
+        chmod 600 private_key.pem
+        ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@3.89.73.48<< EOF
+          docker stop ror-container || true
+          docker rm ror-container || true
+          docker pull 048273253858.dkr.ecr.us-east-1.amazonaws.com/ror-demo:sample_image
+          docker run -d --name ror-container -p 3000:3000 048273253858.dkr.ecr.us-east-1.amazonaws.com/ror-demo:sample_image
+          
+      env:
+        DOCKER_CLI_APS: "1"
+        PRIVATE_KEY: ${{ secrets.EC2_INSTANCE_SSH_KEY }}
