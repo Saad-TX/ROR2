@@ -16,29 +16,28 @@ jobs:
       EC2_INSTANCE_IP: 3.89.73.48
       EC2_INSTANCE_SSH_KEY: ${{ secrets.EC2_INSTANCE_SSH_KEY }}
       DOCKER_IMAGE_NAME: new-image
+      DOCKER_TAG: ${{ github.sha }}
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v2
-    
-    # - name: Configure AWS credentials
-    #   uses: aws-actions/configure-aws-credentials@v1
-    #   with:
-    #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #     aws-region: us-east-1
-        
+
     - name: Login to Amazon ECR
       run: |
-        aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
     - name: Build and Push Docker Image to ECR
       run: |
-        docker build -t ${{ env.DOCKER_IMAGE_NAME }} .
-        docker tag ${{ env.DOCKER_IMAGE_NAME }} ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
-        docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+        docker build -t $DOCKER_IMAGE_NAME .
+        docker tag $DOCKER_IMAGE_NAME $ECR_REGISTRY/$ECR_REPOSITORY:$DOCKER_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$DOCKER_TAG
 
     - name: Deploy Docker Image to EC2 Instance
       run: |
-        scp -i ${{ env.EC2_INSTANCE_SSH_KEY }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./ec2-deployment ubuntu@${{ env.EC2_INSTANCE_IP }}:/home/ubuntu/
-        ssh -i ${{ env.EC2_INSTANCE_SSH_KEY }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ env.EC2_INSTANCE_IP }} "cd /home/ubuntu/ec2-deployment && docker-compose up -d"
+        scp -i $EC2_INSTANCE_SSH_KEY -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./ec2-deployment ubuntu@$EC2_INSTANCE_IP:/home/ubuntu/
+        ssh -i $EC2_INSTANCE_SSH_KEY -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@$EC2_INSTANCE_IP "cd /home/ubuntu/ec2-deployment && docker-compose up -d"
+
+    - name: Cleanup
+      run: |
+        docker logout $ECR_REGISTRY
+        # Any additional cleanup steps you may need
