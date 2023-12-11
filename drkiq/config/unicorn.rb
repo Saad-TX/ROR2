@@ -3,8 +3,8 @@
 
 # Go with at least 1 per CPU core, a higher amount will usually help for fast
 # responses such as reading from a cache.
-worker_processes ENV['WORKER_PROCESSES'].to_i
-# worker_processes 2
+# worker_processes ENV['WORKER_PROCESSES'].to_i
+worker_processes 2
 
 # Listen on a tcp port or unix socket.
 listen ENV['LISTEN_ON']
