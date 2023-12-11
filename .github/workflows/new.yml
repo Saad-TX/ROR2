@@ -1,4 +1,4 @@
-name: Build and push image to ECR
+name: Build Push & Deploy
 
 on: push
   
@@ -36,8 +36,8 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
     
-    - name: Pull Docker image from ECR
-      run: docker pull 048273253858.dkr.ecr.us-east-1.amazonaws.com/ror-demo:sample_image
+    # - name: Pull Docker image from ECR
+    #   run: docker pull 048273253858.dkr.ecr.us-east-1.amazonaws.com/ror-demo:sample_image
     
     - name: Deploy to Ec2
       env:  
@@ -54,9 +54,9 @@ jobs:
           # sudo apt-get update
           # sudo apt-get install -y docker.io
           # sudo service docker start
-          sudo chmod 666 /var/run/docker.sock
-          # docker stop webapp || true
-          # docker rm webapp || true
+          #sudo chmod 666 /var/run/docker.sock
+          docker stop ror-container || true
+          docker rm ror-container || true
           docker pull 048273253858.dkr.ecr.us-east-1.amazonaws.com/ror-demo:sample_image
           docker run -d --name ror-container -p 3000:3000 048273253858.dkr.ecr.us-east-1.amazonaws.com/ror-demo:sample_image
         
