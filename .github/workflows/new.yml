@@ -9,6 +9,8 @@ jobs:
     
     name: Build Image
     runs-on: ubuntu-latest
+    environment: Production
+
 
    
     steps:
@@ -40,11 +42,13 @@ jobs:
     #   run: docker pull 048273253858.dkr.ecr.us-east-1.amazonaws.com/ror-demo:sample_image
     
     - name: Deploy to Ec2
+      
       env:  
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ror-demo
         IMAGE_TAG: sample_image
         aws-region: us-east-1
+      
       uses: appleboy/ssh-action@master
       with:
         host: 54.175.54.172
