@@ -47,7 +47,7 @@ jobs:
         aws-region: us-east-1
       uses: appleboy/ssh-action@master
       with:
-        host: 34.229.196.43
+        host: 54.175.54.172
         username: ubuntu
         key: ${{secrets.EC2_INSTANCE_SSH_KEY}}
         script: |
