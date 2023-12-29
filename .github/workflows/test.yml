@@ -2,7 +2,7 @@ name: Build Push & Deploy
 
 on:
   push:
-    branches: ["feature_deploymwnt"]
+    branches: ["main"]
 
 jobs:
   build:
@@ -27,5 +27,5 @@ jobs:
       uses: slackapi/slack-github-action@v1.24.0
       with:
         text: "New Pull Request: #${{ github.event.pull_request.number }} opened by ${{ github.event.pull_request.user.login }}"
-        channel: your_slack_channel
+        channel: test-msg-channel
         # Additional configuration options for the Slack message
