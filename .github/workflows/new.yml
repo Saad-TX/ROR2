@@ -1,6 +1,8 @@
 name: Build Push & Deploy
 
-on: none
+on: 
+  push: 
+    branches: ["feature_pipeline_setup"]
   
 
 jobs:
